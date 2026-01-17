@@ -16,6 +16,22 @@ export default function ProductDetail() {
         });
     }, [id]);
 
+    const HandleBeli = () => {
+        alert('sedang memproses......');
+
+        axios.post(`http://127.0.0.1:8000/api/cart`, {
+            product_id: id,
+            quantity: 1
+        })
+        .then (response => {
+            alert(response.data.message);
+        })
+        .catch(error => {
+            console.error("gagal beli", error);
+            alert("gagal masukin ke keranjang cek console ya");
+        });
+    }
+
     if (!product) return <h1>Sabar loading...</h1>;
 
     return (
@@ -25,7 +41,9 @@ export default function ProductDetail() {
             <p>Stok: {product.stock}</p>
             <p>{product.description}</p>
             
-            <button style={{ 
+            <button 
+            onClick={HandleBeli}
+            style={{ 
                 padding: '10px 20px', 
                 backgroundColor: 'black', 
                 color: 'white', 
