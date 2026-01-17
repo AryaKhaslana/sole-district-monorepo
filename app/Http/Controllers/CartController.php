@@ -16,7 +16,7 @@ class CartController extends Controller
         Cart::destroy($id);
         return response()->json(['message' => 'barang dibuang']);
     }
-
+    
     public function store(Request $request) {
         $request->validate([
             'product_id' => 'required|exists:products,id',

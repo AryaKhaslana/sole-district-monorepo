@@ -23,8 +23,20 @@ export default function CartPage () {
             });
     };
 
+    const HandleBeli = (id) => {
+        axios.delete(`http://127.0.0.1:8000/api/cart/${id}`)
+        .then(() => {
+            AmbilDataKeranjang();
+            alert('dah ilang barangnya');
+        });
+    }
+
+    const GrandTotal = cartItems.reduce((total, item) => {
+        return total + (item.product.price * item.quantity);
+    }, 0);
 
     return (
+<div>
     <table border="1" cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
     <thead>
         <tr style={{ background: "#f0f0f0" }}>
@@ -32,6 +44,7 @@ export default function CartPage () {
             <th>Harga</th>
             <th>Jumlah</th>
             <th>Total</th>
+            <th>aksi</th>
         </tr>
     </thead>
     <tbody>
@@ -55,9 +68,34 @@ export default function CartPage () {
                 <td>
                     Rp {item.product.price * item.quantity}
                 </td>
+                <td>
+                <button 
+                onClick={() => HandleBeli(item.id)} // <--- Kirim ID keranjang
+                style={{ backgroundColor: 'red', color: 'white' }}
+                 >
+                    Hapus 🗑️
+                </button>
+                </td>
             </tr>
         ))}
     </tbody>
 </table>
+
+<div style={{ marginTop: '20px', textAlign: 'right' }}>
+            <h3>Total Belanja: Rp {GrandTotal}</h3>
+                
+            <button style={{
+                backgroundColor: 'green',
+                color: 'white',
+                padding: '10px 20px',
+                fontSize: '16px',
+                border: 'none',
+                cursor: 'pointer',
+                marginTop: '10px'
+            }}>
+                Checkout Sekarang 💸
+            </button>
+        </div>
+</div>
     );
 }
