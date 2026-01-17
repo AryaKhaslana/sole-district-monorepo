@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\String\ByteString;
 
 class ProductController extends Controller
 {
@@ -15,13 +17,9 @@ class ProductController extends Controller
         return response()->json(Product::all());
     }
 
-    // LIHAT DETAIL BARANG (Public)
-    public function show($id) {
-        // besok
-    }
-
+    
     // --- FITUR ADMIN DI BAWAH INI ---
-
+    
     // TAMBAH BARANG (Admin Only)
     public function store(Request $request)
     {
@@ -45,10 +43,16 @@ class ProductController extends Controller
             'price' => $request->price,
             'stock' => $request->stock,
             'image_url' => $imageUrl
-        ]);
-
-        return response()->json(['message' => 'Barang baru ditambahkan!', 'data' => $product]);
-    }
-    
-    // UPDATE & DELETE bisa lo tambahin sendiri polanya sama kayak store
+            ]);
+            
+            return response()->json(['message' => 'Barang baru ditambahkan!', 'data' => $product]);
+            }
+            
+            // UPDATE & DELETE bisa lo tambahin sendiri polanya sama kayak store
+            // LIHAT DETAIL BARANG (Public)
+            public function show($id)
+            {
+                $product = Product::findOrFail($id);
+                return response()-> json($product);
+            }
 }

@@ -14,13 +14,13 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // Protected (Harus Login)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // User Order Actions
-    Route::post('/checkout', [OrderController::class, 'store']); // Beli
-    Route::post('/orders/{id}/upload', [OrderController::class, 'uploadProof']); // Upload Bukti
-    
-    // Admin Actions
-    Route::post('/products', [ProductController::class, 'store']); // Tambah Barang
-    Route::post('/orders/{id}/verify', [OrderController::class, 'verifyPayment']); // Acc Bayaran
+Route::post('/logout', [AuthController::class, 'logout']);
+
+// User Order Actions
+Route::post('/checkout', [OrderController::class, 'store']); // Beli
+Route::post('/orders/{id}/upload', [OrderController::class, 'uploadProof']); // Upload Bukti
+
+// Admin Actions
+Route::post('/products', [ProductController::class, 'store']); // Tambah Barang
+Route::post('/orders/{id}/verify', [OrderController::class, 'verifyPayment']); // Acc Bayaran
 });

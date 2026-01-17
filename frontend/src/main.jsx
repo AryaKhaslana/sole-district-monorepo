@@ -1,10 +1,14 @@
-import { StrictMode } from 'react'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { BrowserRouter } from 'react-router-dom'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+ <React.StrictMode>
+    <BrowserRouter> {/* <--- 2. BUNGKUS <App /> PAKE INI */}
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>,
 )
