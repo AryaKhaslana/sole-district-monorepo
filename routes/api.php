@@ -13,6 +13,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::post('/cart', [CartController::class, 'store']);
+Route::get('/cart', [CartController::class, 'index']);
+Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 
 // Protected (Harus Login)
 Route::middleware('auth:sanctum')->group(function () {

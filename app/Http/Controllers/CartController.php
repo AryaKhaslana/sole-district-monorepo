@@ -7,6 +7,16 @@ use App\Models\Cart;
 
 class CartController extends Controller
 {
+    public function index() {
+        $keranjang = Cart::with('product')->get();  
+        return response()->json($keranjang);
+    }
+
+    public function destroy($id) {
+        Cart::destroy($id);
+        return response()->json(['message' => 'barang dibuang']);
+    }
+
     public function store(Request $request) {
         $request->validate([
             'product_id' => 'required|exists:products,id',
