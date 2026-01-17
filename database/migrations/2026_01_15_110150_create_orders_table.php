@@ -14,14 +14,8 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
         $table->id();
         $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Siapa yang beli
-        $table->decimal('total_price', 12, 2);
-        $table->string('payment_proof')->nullable(); // Foto Bukti Transfer
-        // Status Pesanan:
-        // pending = Baru checkout, belum bayar
-        // waiting_verification = Udah upload bukti, nunggu admin cek
-        // paid = Admin udah acc, barang siap kirim
-        // cancelled = Batal
-        $table->enum('status', ['pending', 'waiting_verification', 'paid', 'cancelled'])->default('pending');
+        $table->decimal('total_price', 15, 2);
+        $table->string('status')->default('pending');
         $table->timestamps();
     });
     }

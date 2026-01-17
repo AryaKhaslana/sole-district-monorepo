@@ -31,6 +31,21 @@ export default function CartPage () {
         });
     }
 
+    const HandleCheckout = () => {
+        if (!confirm("Yakin kamu mau checkout semua barang ini ?")) return;
+
+        axios.post("http://127.0.0.1:8000/api/checkout")
+            .then((response) => {
+                alert(response.data.message);
+
+                AmbilDataKeranjang();
+            })
+            .catch((error) => {
+                console.error("Error checkout nih", error);
+                alert("gagal checkout broskie")
+            });
+    };
+
     const GrandTotal = cartItems.reduce((total, item) => {
         return total + (item.product.price * item.quantity);
     }, 0);
@@ -84,7 +99,9 @@ export default function CartPage () {
 <div style={{ marginTop: '20px', textAlign: 'right' }}>
             <h3>Total Belanja: Rp {GrandTotal}</h3>
                 
-            <button style={{
+            <button 
+            onClick={HandleCheckout}
+            style={{
                 backgroundColor: 'green',
                 color: 'white',
                 padding: '10px 20px',
