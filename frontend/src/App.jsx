@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import HomePage from './HomePage';
 import CartPage from './CartPage';
 import OrderHistory from './OrderHistory';
+import LoginPage from './LoginPage';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
       <Route path="/cart" element={<CartPage/>} />
 
       <Route path='/history' element={<OrderHistory/>} />
+
+      <Route path='/login' element={<LoginPage/>} />
      </Routes>
 
   );
