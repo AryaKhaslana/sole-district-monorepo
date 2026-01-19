@@ -4,17 +4,30 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use GuzzleHttp\Psr7\Query;
 use Illuminate\Http\Request;
 use illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\String\ByteString;
 
+use function Laravel\Prompts\search;
+
 class ProductController extends Controller
 {
     // LIHAT SEMUA BARANG (Public)
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Product::all());
+        $query = Product::query();
+
+        if($request->has('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('description', 'like', '%' . $search . '%');
+        }
+
+        $products = $query->paginate(10);
+
+        return response()->json($products);
     }
 
     
