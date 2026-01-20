@@ -1,16 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api; // <--- PASTIKAN INI BENAR
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use GuzzleHttp\Psr7\Query;
 use Illuminate\Http\Request;
-use illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\String\ByteString;
-
-use function Laravel\Prompts\search;
 
 class ProductController extends Controller
 {
@@ -26,46 +21,63 @@ class ProductController extends Controller
         }
 
         $products = $query->paginate(10);
-
         return response()->json($products);
     }
 
-    
-    // --- FITUR ADMIN DI BAWAH INI ---
-    
     // TAMBAH BARANG (Admin Only)
     public function store(Request $request)
     {
+        // 1. Validasi
         $request->validate([
             'name' => 'required',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' // Max 2MB
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048'
         ]);
 
-        $imageUrl = null;
+        $imagePath = null; 
+        
+        // 2. Cek ada gambar gak?
         if ($request->hasFile('image')) {
-            // Simpan gambar ke folder 'public/products'
-            $path = $request->file('image')->store('products', 'public');
-            $imageUrl = url('storage/' . $path); // Simpan Link Lengkapnya
+            // Simpan ke storage/app/public/products
+            $imagePath = $request->file('image')->store('products', 'public');
         }
 
+        // 3. Simpan ke Database
         $product = Product::create([
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price,
             'stock' => $request->stock,
-            'image_url' => $imageUrl
-            ]);
             
-            return response()->json(['message' => 'Barang baru ditambahkan!', 'data' => $product]);
-            }
+            // PENTING: Pake 'image' sesuai database lu!
+            'image' => $imagePath 
+        ]);
             
-            // UPDATE & DELETE bisa lo tambahin sendiri polanya sama kayak store
-            // LIHAT DETAIL BARANG (Public)
-            public function show($id)
-            {
-                $product = Product::findOrFail($id);
-                return response()-> json($product);
-            }
+        return response()->json([
+            'message' => 'Barang baru ditambahkan!', 
+            'data' => $product
+        ]);
+    }
+    
+    // LIHAT DETAIL (Show)
+    public function show($id)
+    {
+        $product = Product::findOrFail($id);
+        return response()->json($product);
+    }
+
+    // UPDATE & DELETE (Jangan lupa tambahin method delete buat AdminPage lu)
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+        
+        // Hapus gambar lama kalau ada
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+        
+        $product->delete();
+        return response()->json(['message' => 'Produk dihapus']);
+    }
 }

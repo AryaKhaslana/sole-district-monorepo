@@ -15,7 +15,7 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->role !== 'ADMIN') {
+        if ($request->user() && $request->user()->role !== 'admin') {
             return response()->json([
                 'message' => 'eits anda tidak boleh ya'
             ], 403);

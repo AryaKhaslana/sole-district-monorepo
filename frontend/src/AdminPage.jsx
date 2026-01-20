@@ -94,7 +94,7 @@ const AdminPage = () => {
             <div style={{ display: 'flex', gap: '50px' }}>
                 
                 {/* KIRI: FORM TAMBAH BARANG */}
-                <div style={{ flex: 1, background: '#f4f4f4', padding: '20px', borderRadius: '10px' }}>
+                <div style={{ flex: 1, background: '#000000', padding: '20px', borderRadius: '10px' }}>
                     <h3>➕ Tambah Barang Baru</h3>
                     <form onSubmit={handleAddProduct}>
                         <div style={{ marginBottom: '10px' }}>

@@ -11,13 +11,24 @@ export default function HomePage() {
       .catch(error => console.error(error));
   }, []);
 
+  const getImageUrl = (imageName) => {
+    // 1. Kalo gak ada gambar, kasih gambar placeholder (abu-abu)
+    if (!imageName) return 'https://placehold.co/150';
+    
+    // 2. Kalo gambarnya link online (https://...) biarin aja (Produk Seeding)
+    if (imageName.startsWith('http')) return imageName;
+    
+    // 3. Kalo ini hasil upload, gabungin sama link Laravel Storage
+    return `http://127.0.0.1:8000/storage/${imageName}`;
+};
+
   return (
     <div style={{ padding: '40px', color: 'white' }}>
       <h1>👟 STRIDE COMMERCE</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
         {products?.data?.map(item => (
           <div key={item.id} style={{ border: '1px solid #ddd', padding: '15px' }}>
-            <img src={item.image} alt={item.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+            <img src={getImageUrl(item.image)} alt={item.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
             <h3>{item.name}</h3>
             <p>Rp {item.price}</p>
             

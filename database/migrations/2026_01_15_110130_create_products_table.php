@@ -17,7 +17,7 @@ return new class extends Migration
         $table->text('description');
         $table->decimal('price', 12, 2); // Pake decimal biar duitnya akurat
         $table->integer('stock');
-        $table->string('image_url')->nullable(); // Contoh: 'sepatu_kuda.jpg'
+        $table->string('image')->nullable(); // Contoh: 'sepatu_kuda.jpg'
         $table->timestamps();
     });
     }
