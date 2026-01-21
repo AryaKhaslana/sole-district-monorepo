@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import ProductDetail from './ProductDetail'
 import HomePage from './HomePage';
@@ -22,6 +23,7 @@ function App() {
         <Route path='/history' element={<OrderHistory/>} />
         <Route path='/login' element={<LoginPage/>} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/register" element={<RegisterPage />} />
      </Routes>
 
     </Router>

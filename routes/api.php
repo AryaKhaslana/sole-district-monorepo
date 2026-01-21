@@ -26,13 +26,13 @@ Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete (WAJIB DELETE)
 
     // ORDER MANAGEMENT
-    Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders/{id}/verify', [OrderController::class, 'verifyPayment']); // Acc Bayaran
-});
-
-// --- USER ROUTES (Login tapi bukan Admin) ---
-// Kalau lu butuh fitur User biasa (Checkout/Cart), taruh di grup middleware terpisah
-Route::middleware('auth:sanctum')->group(function () {
+    });
+    
+    // --- USER ROUTES (Login tapi bukan Admin) ---
+    // Kalau lu butuh fitur User biasa (Checkout/Cart), taruh di grup middleware terpisah
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
     Route::get('/cart', [CartController::class, 'index']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
