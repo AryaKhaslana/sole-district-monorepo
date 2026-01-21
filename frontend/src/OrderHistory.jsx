@@ -1,13 +1,37 @@
 import { useEffect, useState} from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function OrderHistory() {
     const [orders, setOrders] = useState([]);
+    const Navigate = useNavigate();
     
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/api/orders")
-        .then(res => setOrders(res.data))
-        .catch(err => console.error(err));
+        const token = localStorage.getItem('token');
+
+        if(!token) {
+            alert("login dulu bro biar bisa liat riwayat")
+            Navigate('/login');
+            return;
+        }
+
+        axios.get("http://127.0.0.1:8000/api/orders", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        .then(res => {
+            console.log("data error:", res.data) 
+            setOrders(res.data);
+        })
+        .catch(err => {
+            console.error(err);
+            if (err.response && err.response.status === 401) {
+                alert("sesi habis, login lagi ya");
+                Navigate('/login')
+            }
+        });
+        
     }, []);
 
     return (
