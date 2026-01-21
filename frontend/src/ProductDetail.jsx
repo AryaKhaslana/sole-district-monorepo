@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useEffect, useState} from "react";
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function ProductDetail() {
@@ -16,21 +16,35 @@ export default function ProductDetail() {
         });
     }, [id]);
 
-    const HandleBeli = () => {
-        alert('sedang memproses......');
+    const HandleBeli = async() => {
+        try {
+            const token = localStorage.getItem('token');
+            const Navigate = useNavigate
 
-        axios.post(`http://127.0.0.1:8000/api/cart`, {
-            product_id: id,
-            quantity: 1
-        })
-        .then (response => {
-            alert(response.data.message);
-        })
-        .catch(error => {
-            console.error("gagal beli", error);
-            alert("gagal masukin ke keranjang cek console ya");
-        });
-    }
+            if (!token) {
+                alert("eits, login dulu bro")
+                Navigate('/login');
+                return;
+            }
+
+            await axios.post('http://127.0.0.1:8000/api/cart',
+                {
+                    product_id: id,
+                    quantity: 1
+                },
+                {
+                    headers: {
+                        Authorization: `bearer ${token}`
+                    }
+                }
+            );
+            alert('Behasil masuk keranjang');
+
+        } catch(error) {
+            console.error("Gagal beli:", error);
+            alert("gagal masukin keranjang cek konsole")
+        }
+    };
 
     if (!product) return <h1>Sabar loading...</h1>;
 

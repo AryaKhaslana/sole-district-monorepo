@@ -1,49 +1,73 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Navigate } from "react-router-dom";
 
 // Di dalam return (...)
 export default function CartPage () {
     const [cartItems, setCartItems] = useState([]);
-
-    useEffect (() => {
-        axios.get('http://127.0.0.1:8000/api/cart')
+    
+    const AmbilDataKeranjang = () => {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            alert('login dulu bos')
+            Navigate('/login')
+            return;
+        }
+        
+        axios.get("http://127.0.0.1:8000/api/cart", {
+            headers: {Authorization: `Bearer ${token}`}
+        })
         .then((response) => {
             setCartItems(response.data);
         })
-        .catch((err) => console.error(err));
-    }, []);
-
-    const AmbilDataKeranjang = () => {
-        axios.get("http://127.0.0.1:8000/api/cart")
-            .then((response) => {
-                setCartItems(response.data);
-            })
-            .catch((error) => {
-                console.error("Gagal ambil data", error);
-            });
-    };
-
-    const HandleBeli = (id) => {
-        axios.delete(`http://127.0.0.1:8000/api/cart/${id}`)
-        .then(() => {
-            AmbilDataKeranjang();
-            alert('dah ilang barangnya');
+        .catch((error) => {
+            console.error("Gagal ambil data", error);
         });
+    };
+    
+        useEffect (() => {
+           AmbilDataKeranjang();
+        }, []);
+    
+    const HandleBeli = (id) => {
+        const token = localStorage.getItem('token');
+
+        axios.delete(`http://127.0.0.1:8000/api/cart/${id}`, {
+            headers: {Authorization: `Bearer: ${token}`}
+        })
+        .then(() => {
+            alert('dah ilang barangnya');
+            AmbilDataKeranjang();
+        })
+        .catch((err) => console.error(err));
     }
 
     const HandleCheckout = () => {
         if (!confirm("Yakin kamu mau checkout semua barang ini ?")) return;
 
-        axios.post("http://127.0.0.1:8000/api/checkout")
-            .then((response) => {
-                alert(response.data.message);
+        const token = localStorage.getItem('token');
 
-                AmbilDataKeranjang();
-            })
-            .catch((error) => {
-                console.error("Error checkout nih", error);
-                alert("gagal checkout broskie")
-            });
+        axios.post("http://127.0.0.1:8000/api/checkout", 
+        {}, 
+        {
+            headers: {Authorization: `Bearer ${token}`}
+        }
+    )
+    .then((response) => {
+        alert(response.data.message);
+
+         AmbilDataKeranjang();
+    })
+    .catch((error) => {
+            console.error("Error checkout nih", error);
+
+            if (error.response && error.response.status === 401) {
+                alert('sesi habis, login lagi');
+            } else {
+                alert("gagal checkout broskie");
+            }
+        });
     };
 
     const GrandTotal = cartItems.reduce((total, item) => {

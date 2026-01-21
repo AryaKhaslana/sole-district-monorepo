@@ -5,65 +5,81 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // Buat Transaction
 
 class OrderController extends Controller
 {
+
+    public function index(Request $request) {
+
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            $orders = Order::with('items.product')->orderBy('created_at', 'desc')->get();
+        } else {
+            $orders = Order::with('items.product') -> where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        }
+
+        return response()->json($orders);
+    }
+
     // 1. CHECKOUT (User Beli Barang)
     public function store(Request $request)
     {
-        // Validasi: Pastikan data 'items' dikirim dari Frontend
-        // Bentuk JSON yg dikirim Frontend harus gini: 
-        // { "items": [ {"product_id": 1, "quantity": 2}, {"product_id": 3, "quantity": 1} ] }
+       $user = $request->user();
         
-        $request->validate([
-            'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
+        // 1. Ambil semua isi keranjang user
+        $cartItems = Cart::where('user_id', $user->id)->get();
 
-        // Pake DB Transaction: Kalau satu gagal, semua batal (Biar stok gak selisih)
-        return DB::transaction(function () use ($request) {
+        if ($cartItems->isEmpty()) {
+            return response()->json(['message' => 'Keranjang kosong bro!'], 400);
+        }
+
+        return DB::transaction(function () use ($user, $cartItems) {
             $totalPrice = 0;
             $orderItemsData = [];
 
-            // Looping barang belanjaan
-            foreach ($request->items as $item) {
-                $product = Product::lockForUpdate()->find($item['product_id']); // Kunci stok biar gak rebutan
+            // 2. Looping isi keranjang buat dipindah ke Order
+            foreach ($cartItems as $item) {
+                $product = Product::lockForUpdate()->find($item->product_id);
 
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception("Stok {$product->name} habis bro! Sisa {$product->stock}");
+                if (!$product || $product->stock < $item->quantity) {
+                    throw new \Exception("Stok {$product->name} abis atau kurang bro!");
                 }
 
                 // Kurangi Stok
-                $product->stock -= $item['quantity'];
+                $product->stock -= $item->quantity;
                 $product->save();
 
                 // Hitung Subtotal
-                $subtotal = $product->price * $item['quantity'];
+                $subtotal = $product->price * $item->quantity;
                 $totalPrice += $subtotal;
 
-                // Siapin data buat tabel order_items
+                // Siapin data order_items
                 $orderItemsData[] = [
                     'product_id' => $product->id,
-                    'quantity' => $item['quantity'],
+                    'quantity' => $item->quantity,
                     'price_at_purchase' => $product->price,
                 ];
             }
 
-            // Bikin Order Utama
+            // 3. Bikin Order Utama
             $order = Order::create([
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
                 'total_price' => $totalPrice,
-                'status' => 'pending' // Belum bayar
+                'status' => 'pending'
             ]);
 
-            // Masukin detail barang ke database
+            // 4. Masukin detail barang
             foreach ($orderItemsData as $data) {
-                $order->items()->create($data); // Pastikan di Model Order ada relasi hasMany 'items'
+                $order->items()->create($data);
             }
+
+            // 5. PENTING: KOSONGIN KERANJANG!! 🗑️
+            Cart::where('user_id', $user->id)->delete();
 
             return response()->json([
                 'message' => 'Order berhasil! Silakan transfer.',
