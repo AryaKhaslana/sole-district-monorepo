@@ -1,0 +1,12 @@
+[90m= [39m[34;4mApp\Models\User[39;24m {#5384
+    [34mid[39m: [35m2[39m,
+    [34mname[39m: "[32mabs[39m",
+    [34memail[39m: "[32madmin@gmail.com[39m",
+    [34mrole[39m: "[32mcustomer[39m",
+    [34mpassword[39m: "[32m$2y$12$Wls3ZdlkRjlYYg3I8soCw./3.cCnc4i47.9zQShfpz.KtPUpWGp.S[39m",
+    [34maddress[39m: [36mnull[39m,
+    [34mphone[39m: [36mnull[39m,
+    [34mcreated_at[39m: "[32m2026-01-21 12:53:50[39m",
+    [34mupdated_at[39m: "[32m2026-01-21 12:53:50[39m",
+  }
+

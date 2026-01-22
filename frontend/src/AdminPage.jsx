@@ -25,7 +25,7 @@ const AdminPage = () => {
             navigate('/');
         } else {
             fetchProducts();
-            fetchOrders(); // <--- Fetch Orderan juga
+            fetchOrders(); 
         }
     }, []);
 
@@ -39,9 +39,8 @@ const AdminPage = () => {
 
     const fetchOrders = async () => {
         try {
-            // Karena lu Admin, API ini bakal balikin SEMUA order orang lain
             const res = await axios.get('http://127.0.0.1:8000/api/orders', {
-                headers: { Authorization: `Bearer ${token}` } // <--- INGET TOKEN!
+                headers: { Authorization: `Bearer ${token}` }
             });
             setOrders(res.data);
         } catch (error) { console.error("Gagal ambil order", error); }
@@ -62,7 +61,7 @@ const AdminPage = () => {
         }
     };
 
-    // FITUR TAMBAH PRODUK (Sama kayak kemaren)
+    // FITUR TAMBAH PRODUK
     const handleAddProduct = async (e) => {
         e.preventDefault();
         const formData = new FormData();
@@ -156,34 +155,71 @@ const AdminPage = () => {
                 </div>
             )}
 
-            {/* --- KONTEN TAB ORDERS (BARU!) --- */}
+            {/* --- KONTEN TAB ORDERS (YANG KITA UPDATE!) --- */}
             {activeTab === 'orders' && (
                 <div>
                     <h3>📜 Daftar Pesanan Masuk</h3>
                     {orders.length === 0 ? <p>Belum ada yang beli nih sepi...</p> : (
                         orders.map(order => (
                             <div key={order.id} style={{ background: '#1e1e1e', padding: '15px', marginBottom: '15px', borderRadius: '8px', border: '1px solid #333' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <h4>Order #{order.id} - Total: Rp {order.total_price.toLocaleString()}</h4>
-                                    
-                                    {/* TOMBOL VERIFIKASI (Hanya muncul kalau PENDING) */}
-                                    {order.status === 'pending' ? (
-                                        <button 
-                                            onClick={() => handleVerifyPayment(order.id)}
-                                            style={{ background: '#ffc107', color: 'black', border: 'none', padding: '5px 15px', fontWeight: 'bold', cursor: 'pointer' }}
-                                        >
-                                            💰 TERIMA PEMBAYARAN
-                                        </button>
-                                    ) : (
-                                        <span style={{ color: 'lightgreen', fontWeight: 'bold' }}>✅ LUNAS (PAID)</span>
-                                    )}
+                                {/* HEADER ORDER */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div>
+                                        <h4>Order #{order.id} - {order.user?.name || 'User Hantu'}</h4>
+                                        <p style={{ color: '#aaa', fontSize: '14px' }}>Total: Rp {order.total_price.toLocaleString()}</p>
+                                    </div>
+
+                                    {/* BADGE STATUS WARNA-WARNI */}
+                                    <div style={{ textAlign: 'right' }}>
+                                        <span style={{ 
+                                            background: order.status === 'paid' ? 'green' : order.status === 'waiting_verification' ? '#007bff' : 'orange',
+                                            color: 'white',
+                                            padding: '5px 10px', borderRadius: '5px', fontSize: '12px', fontWeight: 'bold'
+                                        }}>
+                                            {order.status.toUpperCase().replace('_', ' ')}
+                                        </span>
+                                    </div>
                                 </div>
-                                
-                                <ul style={{ marginTop: '10px', background: '#252525', padding: '10px' }}>
+
+                                {/* 👇 FITUR LIHAT BUKTI TRANSFER 👇 */}
+                                {order.payment_proof && (
+                                    <div style={{ marginTop: '10px', background: '#333', padding: '10px', borderRadius: '5px' }}>
+                                        <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#ccc' }}>📸 Bukti Transfer dari User:</p>
+                                        
+                                        {/* Preview Gambar */}
+                                        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                                            <img src={order.payment_proof} alt="Bukti" style={{ height: '80px', borderRadius: '5px', border: '1px solid #555' }} />
+                                            <a href={order.payment_proof} target="_blank" rel="noopener noreferrer" style={{ color: '#4da3ff', textDecoration: 'underline', fontSize: '14px' }}>
+                                                🔍 Lihat Full Size
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LIST BARANG */}
+                                <ul style={{ marginTop: '10px', background: '#252525', padding: '10px', listStyle: 'none' }}>
                                     {order.items.map(item => (
-                                        <li key={item.id}>📦 {item.product?.name} (x{item.quantity})</li>
+                                        <li key={item.id} style={{borderBottom: '1px dashed #444', padding: '5px 0'}}>
+                                            📦 {item.product?.name} (x{item.quantity})
+                                        </li>
                                     ))}
                                 </ul>
+
+                                {/* TOMBOL AKSI (CUMA MUNCUL KALAU STATUSNYA 'WAITING_VERIFICATION') */}
+                                <div style={{ marginTop: '15px' }}>
+                                    {order.status === 'waiting_verification' ? (
+                                        <button 
+                                            onClick={() => handleVerifyPayment(order.id)}
+                                            style={{ background: '#28a745', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+                                        >
+                                            ✅ TERIMA PEMBAYARAN (ACC)
+                                        </button>
+                                    ) : order.status === 'pending' ? (
+                                        <p style={{color: 'orange', fontStyle: 'italic'}}>⏳ Menunggu user upload bukti...</p>
+                                    ) : (
+                                        <p style={{color: 'lightgreen', fontStyle: 'italic'}}>✅ Transaksi Selesai</p>
+                                    )}
+                                </div>
                             </div>
                         ))
                     )}

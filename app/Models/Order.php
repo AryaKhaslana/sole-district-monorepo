@@ -9,7 +9,12 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $guarded = []; // <--- MANTRA WAJIB
+   protected $fillable = [
+    'user_id',
+    'total_price',
+    'status',
+    'payment_proof', // <--- WAJIB ADA INI
+    ];
 
     // Ini biar Order tau dia punya banyak Item
     public function items()

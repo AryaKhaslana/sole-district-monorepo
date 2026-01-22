@@ -25,6 +25,10 @@ class User extends Authenticatable
         'password',
         'role', // Pastiin ini ada juga biar gak error pas register
     ];
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 
     // ... sisa kodingan bawahnya biarin aja
 }

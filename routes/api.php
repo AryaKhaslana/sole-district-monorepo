@@ -4,8 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\CartController;
+use App\Models\Order;
 
 // --- PUBLIC ROUTES (Bisa diakses siapa aja) ---
 Route::post('/register', [AuthController::class, 'register']);
@@ -36,6 +37,7 @@ Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
     Route::post('/cart', [CartController::class, 'store']);
     Route::get('/cart', [CartController::class, 'index']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
-    Route::post('/checkout', [OrderController::class, 'checkout']);
+    Route::post('/checkout', [OrderController::class, 'store']);
     Route::post('/orders/{id}/upload', [OrderController::class, 'uploadProof']); 
+    Route::post('/orders/{id}/pay', [OrderController::class, 'uploadProof']);
 });

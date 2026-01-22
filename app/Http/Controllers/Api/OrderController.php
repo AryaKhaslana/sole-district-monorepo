@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessCheckout;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
@@ -80,6 +81,8 @@ class OrderController extends Controller
 
             // 5. PENTING: KOSONGIN KERANJANG!! 🗑️
             Cart::where('user_id', $user->id)->delete();
+
+            ProcessCheckout::dispatch();
 
             return response()->json([
                 'message' => 'Order berhasil! Silakan transfer.',
