@@ -1,232 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const AdminPage = () => {
-    const [activeTab, setActiveTab] = useState('products'); // 'products' atau 'orders'
-    const [products, setProducts] = useState([]);
+export default function AdminDashboard() {
     const [orders, setOrders] = useState([]);
-    
-    // State buat Form Produk
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState('');
-    const [description, setDescription] = useState('');
-    const [image, setImage] = useState(null);
-
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user'));
 
-    // 1. CEK ADMIN & FETCH DATA AWAL
+    // 1. CEK ADMIN & AMBIL DATA
     useEffect(() => {
-        if (!token || !user || user.role !== 'admin') {
-            alert("MAU NGAPAIN? LU BUKAN ADMIN! 👮‍♂️");
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        // Proteksi: Kalo bukan admin, tendang!
+        if (!token || user?.role !== 'admin') {
+            alert("Eits! Anda bukan Admin. Dilarang masuk area terlarang! ⛔");
             navigate('/');
-        } else {
-            fetchProducts();
-            fetchOrders(); 
+            return;
         }
+
+        fetchOrders();
     }, []);
 
-    // --- API CALLS ---
-    const fetchProducts = async () => {
-        try {
-            const res = await axios.get('http://127.0.0.1:8000/api/products');
-            setProducts(res.data.data);
-        } catch (error) { console.error("Gagal ambil produk", error); }
-    };
-
+    // 2. FUNGSI AMBIL DATA (Pake Endpoint Lama Lu: /api/orders)
     const fetchOrders = async () => {
+        const token = localStorage.getItem('token');
         try {
-            const res = await axios.get('http://127.0.0.1:8000/api/orders', {
+            // 👇 KITA BALIKIN PAKE ENDPOINT LAMA LU BIAR GAK ERROR
+            const response = await axios.get('http://127.0.0.1:8000/api/orders', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setOrders(res.data);
-        } catch (error) { console.error("Gagal ambil order", error); }
+            // Handle response Laravel (kadang dibungkus .data, kadang enggak)
+            setOrders(response.data.data || response.data);
+            setLoading(false);
+        } catch (error) {
+            console.error(error);
+            alert("Gagal ambil data order.");
+            setLoading(false);
+        }
     };
 
-    // FITUR ACC PESANAN (VERIFIKASI)
+    // 3. FUNGSI VERIFIKASI (Pake Logic Lama Lu: /verify)
     const handleVerifyPayment = async (orderId) => {
-        if (!confirm("Yakin mau ACC pesanan ini? Duit udah masuk kan? 💸")) return;
+        if (!confirm("Yakin duitnya udah masuk rekening? 💸")) return;
 
+        const token = localStorage.getItem('token');
         try {
+            // 👇 PAKE ENDPOINT VERIFY LAMA LU
             await axios.post(`http://127.0.0.1:8000/api/orders/${orderId}/verify`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Pesanan Diterima! Status berubah jadi PAID ✅");
             fetchOrders(); // Refresh tabel
         } catch (error) {
-            alert("Gagal verifikasi bro.");
+            console.error(error);
+            alert("Gagal verifikasi bro. Cek backend.");
         }
     };
 
-    // FITUR TAMBAH PRODUK
-    const handleAddProduct = async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('price', price);
-        formData.append('stock', stock);
-        formData.append('description', description);
-        if (image) formData.append('image', image);
-
-        try {
-            await axios.post('http://127.0.0.1:8000/api/products', formData, {
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-            });
-            alert("Produk nambah bos!");
-            fetchProducts();
-            setName(''); setPrice(''); setStock(''); setDescription('');
-        } catch (error) { alert("Gagal nambah produk."); }
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        return `http://127.0.0.1:8000/storage/${path}`;
     };
 
-    // FITUR HAPUS PRODUK
-    const handleDeleteProduct = async (id) => {
-        if (confirm("Hapus barang ini?")) {
-            try {
-                await axios.delete(`http://127.0.0.1:8000/api/products/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                fetchProducts();
-            } catch (error) { alert("Gagal hapus."); }
-        }
-    };
+    if (loading) return <div className="min-h-screen bg-black text-white pt-32 text-center">Loading Data Bos...</div>;
 
     return (
-        <div style={{ padding: '30px', backgroundColor: '#121212', minHeight: '100vh', color: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1>👮‍♂️ Dashboard Admin</h1>
-                <button onClick={() => { localStorage.clear(); navigate('/login'); }} style={{ background: 'red', color: 'white', padding: '10px' }}>Logout</button>
-            </div>
-            
-            {/* --- TAB MENU --- */}
-            <div style={{ margin: '20px 0', borderBottom: '1px solid #333' }}>
-                <button 
-                    onClick={() => setActiveTab('products')}
-                    style={{ padding: '10px 20px', background: activeTab === 'products' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}
-                >
-                    📦 Kelola Produk
-                </button>
-                <button 
-                    onClick={() => setActiveTab('orders')}
-                    style={{ padding: '10px 20px', background: activeTab === 'orders' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}
-                >
-                    📜 Kelola Pesanan Masuk
-                </button>
-            </div>
-
-            {/* --- KONTEN TAB PRODUK --- */}
-            {activeTab === 'products' && (
-                <div style={{ display: 'flex', gap: '30px' }}>
-                    {/* FORM INPUT (KIRI) */}
-                    <div style={{ flex: 1, background: '#1e1e1e', padding: '20px', borderRadius: '10px' }}>
-                        <h3>➕ Tambah Barang</h3>
-                        <form onSubmit={handleAddProduct}>
-                            <input type="text" placeholder="Nama Barang" value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-                            <input type="number" placeholder="Harga" value={price} onChange={e => setPrice(e.target.value)} required style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-                            <input type="number" placeholder="Stok" value={stock} onChange={e => setStock(e.target.value)} required style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-                            <textarea placeholder="Deskripsi" value={description} onChange={e => setDescription(e.target.value)} style={{ width: '100%', marginBottom: '10px', padding: '8px' }}></textarea>
-                            <input type="file" onChange={e => setImage(e.target.files[0])} style={{ marginBottom: '10px' }} />
-                            <button type="submit" style={{ width: '100%', background: 'green', color: 'white', padding: '10px' }}>Simpan</button>
-                        </form>
-                    </div>
-
-                    {/* TABEL LIST (KANAN) */}
-                    <div style={{ flex: 2 }}>
-                        <table border="1" style={{ width: '100%', borderCollapse: 'collapse', borderColor: '#444' }}>
-                            <thead>
-                                <tr style={{ background: '#333' }}>
-                                    <th>Nama</th><th>Harga</th><th>Stok</th><th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {products.map(item => (
-                                    <tr key={item.id}>
-                                        <td>{item.name}</td>
-                                        <td>{item.price}</td>
-                                        <td>{item.stock}</td>
-                                        <td><button onClick={() => handleDeleteProduct(item.id)} style={{ background: 'red', color: 'white', border: 'none' }}>Hapus</button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+        <div className="min-h-screen bg-black text-white pt-28 pb-10 px-4">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-['Anton'] uppercase tracking-wider text-red-500">
+                        Admin Dashboard 👮‍♂️
+                    </h1>
+                    <button 
+                        onClick={() => { localStorage.clear(); navigate('/login'); }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold transition"
+                    >
+                        Logout
+                    </button>
                 </div>
-            )}
 
-            {/* --- KONTEN TAB ORDERS (YANG KITA UPDATE!) --- */}
-            {activeTab === 'orders' && (
-                <div>
-                    <h3>📜 Daftar Pesanan Masuk</h3>
-                    {orders.length === 0 ? <p>Belum ada yang beli nih sepi...</p> : (
-                        orders.map(order => (
-                            <div key={order.id} style={{ background: '#1e1e1e', padding: '15px', marginBottom: '15px', borderRadius: '8px', border: '1px solid #333' }}>
-                                {/* HEADER ORDER */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <h4>Order #{order.id} - {order.user?.name || 'User Hantu'}</h4>
-                                        <p style={{ color: '#aaa', fontSize: '14px' }}>Total: Rp {order.total_price.toLocaleString()}</p>
-                                    </div>
+                {/* TABEL GANTENG */}
+                <div className="overflow-x-auto bg-[#101010] border border-gray-800 rounded-xl shadow-2xl">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-800 text-gray-400 uppercase text-xs tracking-wider">
+                                <th className="p-4">Order ID</th>
+                                <th className="p-4">Customer</th>
+                                <th className="p-4">Items</th>
+                                <th className="p-4">Total</th>
+                                <th className="p-4">Bukti TF</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                            {orders.map((order) => (
+                                <tr key={order.id} className="hover:bg-gray-900 transition">
+                                    
+                                    {/* ID */}
+                                    <td className="p-4 font-mono text-gray-500">#{order.id}</td>
+                                    
+                                    {/* USER */}
+                                    <td className="p-4">
+                                        <div className="font-bold text-white">{order.user?.name || "Unknown"}</div>
+                                        <div className="text-xs text-gray-500">{order.user?.email}</div>
+                                    </td>
 
-                                    {/* BADGE STATUS WARNA-WARNI */}
-                                    <div style={{ textAlign: 'right' }}>
-                                        <span style={{ 
-                                            background: order.status === 'paid' ? 'green' : order.status === 'waiting_verification' ? '#007bff' : 'orange',
-                                            color: 'white',
-                                            padding: '5px 10px', borderRadius: '5px', fontSize: '12px', fontWeight: 'bold'
-                                        }}>
-                                            {order.status.toUpperCase().replace('_', ' ')}
+                                    {/* ITEMS (List Barang) */}
+                                    <td className="p-4 text-sm text-gray-300">
+                                        <ul className="list-disc pl-4">
+                                            {order.items?.map(item => (
+                                                <li key={item.id}>
+                                                    {item.product?.name} <span className="text-gray-500">(x{item.quantity})</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </td>
+
+                                    {/* TOTAL */}
+                                    <td className="p-4 font-mono text-yellow-400 font-bold">
+                                        Rp {order.total_price.toLocaleString()}
+                                    </td>
+
+                                    {/* BUKTI BAYAR */}
+                                    <td className="p-4">
+                                        {order.payment_proof ? (
+                                            <div className="group relative w-16 h-16">
+                                                <img 
+                                                    src={getImageUrl(order.payment_proof)} 
+                                                    alt="Bukti" 
+                                                    className="w-full h-full object-cover rounded border border-gray-600 cursor-pointer"
+                                                />
+                                                {/* Link buat buka full size */}
+                                                <a 
+                                                    href={getImageUrl(order.payment_proof)} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white rounded transition"
+                                                >
+                                                    Zoom 🔍
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-600 text-xs italic">Belum Upload</span>
+                                        )}
+                                    </td>
+
+                                    {/* STATUS */}
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold uppercase
+                                            ${order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 
+                                              order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 
+                                              order.status === 'waiting_verification' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
+                                            {order.status.replace('_', ' ')}
                                         </span>
-                                    </div>
-                                </div>
+                                    </td>
 
-                                {/* 👇 FITUR LIHAT BUKTI TRANSFER 👇 */}
-                                {order.payment_proof && (
-                                    <div style={{ marginTop: '10px', background: '#333', padding: '10px', borderRadius: '5px' }}>
-                                        <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#ccc' }}>📸 Bukti Transfer dari User:</p>
-                                        
-                                        {/* Preview Gambar */}
-                                        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-                                            <img src={order.payment_proof} alt="Bukti" style={{ height: '80px', borderRadius: '5px', border: '1px solid #555' }} />
-                                            <a href={order.payment_proof} target="_blank" rel="noopener noreferrer" style={{ color: '#4da3ff', textDecoration: 'underline', fontSize: '14px' }}>
-                                                🔍 Lihat Full Size
-                                            </a>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* LIST BARANG */}
-                                <ul style={{ marginTop: '10px', background: '#252525', padding: '10px', listStyle: 'none' }}>
-                                    {order.items.map(item => (
-                                        <li key={item.id} style={{borderBottom: '1px dashed #444', padding: '5px 0'}}>
-                                            📦 {item.product?.name} (x{item.quantity})
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {/* TOMBOL AKSI (CUMA MUNCUL KALAU STATUSNYA 'WAITING_VERIFICATION') */}
-                                <div style={{ marginTop: '15px' }}>
-                                    {order.status === 'waiting_verification' ? (
-                                        <button 
-                                            onClick={() => handleVerifyPayment(order.id)}
-                                            style={{ background: '#28a745', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
-                                        >
-                                            ✅ TERIMA PEMBAYARAN (ACC)
-                                        </button>
-                                    ) : order.status === 'pending' ? (
-                                        <p style={{color: 'orange', fontStyle: 'italic'}}>⏳ Menunggu user upload bukti...</p>
-                                    ) : (
-                                        <p style={{color: 'lightgreen', fontStyle: 'italic'}}>✅ Transaksi Selesai</p>
-                                    )}
-                                </div>
-                            </div>
-                        ))
-                    )}
+                                    {/* ACTION BUTTON (ACC) */}
+                                    <td className="p-4">
+                                        {order.status === 'waiting_verification' || order.status === 'pending' ? (
+                                            <button 
+                                                onClick={() => handleVerifyPayment(order.id)}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition shadow-lg w-full"
+                                            >
+                                                Verifikasi ✅
+                                            </button>
+                                        ) : (
+                                            <span className="text-gray-500 text-xs">Selesai</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-            )}
+            </div>
         </div>
     );
-};
-
-export default AdminPage;
+}

@@ -4,120 +4,80 @@ import { Link, useNavigate } from 'react-router-dom';
 const Navbar = () => {
     const navigate = useNavigate();
     
-    // Ambil data user dari penyimpanan browser
+    // Ambil data user
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 
     // Fungsi Logout
     const handleLogout = () => {
-        localStorage.clear(); // Hapus token & user
+        localStorage.clear();
         alert("Dadah Broskie! 👋");
         navigate('/login');
-        // Reload halaman biar Navbarnya nge-refresh (berubah jadi mode tamu)
         window.location.reload(); 
     };
 
     return (
-        <nav style={styles.nav}>
-            {/* LOGO / NAMA TOKO */}
-            <div style={styles.logo}>
-                <Link to="/" style={styles.linkLogo}>🛒 Toko Broskie</Link>
-            </div>
+        // 👇 DISINI KUNCI GLASS EFFECT NYA
+        // fixed top-0: Nempel di atas layar
+        // backdrop-blur-md: Efek burem kayak kaca
+        // bg-black/60: Warna hitam transparan (60%)
+        // border-b border-white/10: Garis tipis transparan di bawah
+        <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-black/60 border-b border-white/10 transition-all duration-300">
+            
+            <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                
+                {/* LOGO (Pake Font Anton biar senada sama Home) */}
+                <div className="flex items-center">
+                    <Link to="/" className="text-2xl font-bold font-['Anton'] tracking-wider text-white hover:text-yellow-400 transition duration-300 uppercase">
+                        K!CK
+                    </Link>
+                </div>
 
-            {/* MENU LINK */}
-            <div style={styles.menu}>
-                <Link to="/" style={styles.link}>Home</Link>
+                {/* MENU LINK */}
+                <div className="flex items-center gap-6 font-semibold uppercase text-sm tracking-wide">
+                    <Link to="/" className="text-white hover:text-yellow-400 transition">Home</Link>
 
-                {/* LOGIKA: Kalo udah Login */}
-                {token ? (
-                    <>
-                        {/* Kalo dia ADMIN, munculin tombol khusus */}
-                        {user && user.role === 'admin' && (
-                            <Link to="/admin" style={styles.linkAdmin}>Dashboard</Link>
-                        )}
-                        
-                        <Link to="/history" style={styles.link}>Riwayat</Link>
+                    {/* LOGIKA: Kalo udah Login */}
+                    {token ? (
+                        <>
+                            {/* Tombol Dashboard Admin (Merah) */}
+                            {user && user.role === 'admin' && (
+                                <Link to="/admin" className="text-red-500 hover:text-red-400 font-bold transition">
+                                    Dashboard
+                                </Link>
+                            )}
+                            
+                            <Link to="/history" className="text-white hover:text-yellow-400 transition">Riwayat</Link>
 
-                        <Link to="/cart" style={{ 
-                        color: 'white', 
-                        textDecoration: 'none', 
-                        background: '#333', 
-                        padding: '5px 10px', 
-                        borderRadius: '5px' 
-                        }}>
-                          Keranjang 🛒
-                        </Link>
-                        
-                        <button onClick={handleLogout} style={styles.btnLogout}>
-                            Logout
-                        </button>
-                    </>
-                ) : (
-                    /* LOGIKA: Kalo Belum Login */
-                    <>
-                        <Link to="/login" style={styles.btnLogin}>Login</Link>
-                        <Link to="/register" style={styles.link}>Daftar</Link>
-                    </>
-                )}
+                            {/* Tombol Keranjang (Dibuat agak beda) */}
+                            <Link to="/cart" className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-full transition text-white">
+                                <span>Cart</span> 🛒
+                            </Link>
+                            
+                            {/* Tombol Logout */}
+                            <button 
+                                onClick={handleLogout} 
+                                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold transition"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        /* LOGIKA: Kalo Belum Login */
+                        <>
+                            <Link to="/login" className="text-white hover:text-yellow-400 transition">Login</Link>
+                            <Link 
+                                to="/register" 
+                                className="bg-yellow-400 text-black px-5 py-2 rounded font-bold hover:bg-yellow-300 transition"
+                            >
+                                Daftar
+                            </Link>
+                        </>
+                    )}
+                </div>
             </div>
         </nav>
     );
-};
-
-// CSS SEDERHANA BIAR RAPI (Inline Style)
-const styles = {
-    nav: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '15px 50px',
-        backgroundColor: '#1a1a1a', // Warna Hitam Elegan
-        color: 'white',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000
-    },
-    logo: {
-        fontSize: '1.5rem',
-        fontWeight: 'bold',
-    },
-    menu: {
-        display: 'flex',
-        gap: '20px',
-        alignItems: 'center'
-    },
-    linkLogo: {
-        textDecoration: 'none',
-        color: '#00f2ea', // Warna Cyan Neon
-    },
-    link: {
-        textDecoration: 'none',
-        color: 'white',
-        fontSize: '1rem',
-        transition: '0.3s'
-    },
-    linkAdmin: {
-        textDecoration: 'none',
-        color: '#ff4d4d', // Merah buat Admin
-        fontWeight: 'bold'
-    },
-    btnLogout: {
-        padding: '8px 15px',
-        backgroundColor: '#ff4d4d',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer'
-    },
-    btnLogin: {
-        padding: '8px 15px',
-        backgroundColor: '#00f2ea',
-        color: 'black',
-        textDecoration: 'none',
-        borderRadius: '5px',
-        fontWeight: 'bold'
-    }
 };
 
 export default Navbar;
